@@ -4,10 +4,18 @@ compatibility_flags = ["nodejs_compat"]
 main = ".open-next/worker.js"
 assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
+# Route : intercepte uniquement /portail-client/* sur le domaine principal
+# À activer après avoir ajouté agencedelombre.fr dans Cloudflare
+# routes = [
+#   { pattern = "agencedelombre.fr/portail-client/*", zone_name = "agencedelombre.fr" },
+#   { pattern = "www.agencedelombre.fr/portail-client/*", zone_name = "agencedelombre.fr" },
+# ]
+
 [vars]
-NEXT_PUBLIC_APP_URL = "https://portail.agencedelombre.fr"
+NEXT_PUBLIC_APP_URL = "https://agencedelombre.fr"
 NEXT_PUBLIC_SUPABASE_URL = "https://bibcysvxsdrlukoiyuxd.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_05jcVAB9LsIJBloqqv9y-w_2C-0AEKF"
 
-# Secrets à ajouter via : wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# Secrets à ajouter via terminal une seule fois :
+# wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 # wrangler secret put ANTHROPIC_API_KEY
