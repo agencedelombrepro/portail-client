@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
+export const runtime = "edge";
+
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -11,9 +13,7 @@ export async function proxy(request: NextRequest) {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) => {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
@@ -26,43 +26,29 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
 
-  // Demo pages — always accessible regardless of auth state
-  if (pathname.startsWith("/demo")) {
-    return supabaseResponse;
-  }
+  if (pathname.startsWith("/demo")) return supabaseResponse;
 
-  // Public routes
-  if (pathname === "/login" || pathname === "/") {
+  if (pathname === "/login" || pathname === "/" || pathname === "/portail-client" || pathname === "/portail-client/") {
     if (user) {
-      // Already logged in — redirect to correct space
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      const dest = profile?.role === "admin" ? "/admin" : "/client";
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+      const dest = profile?.role === "admin" || profile?.role === "member" ? "/admin" : "/client";
       return NextResponse.redirect(new URL(dest, request.url));
     }
     return supabaseResponse;
   }
 
-  // Protected routes
+  if (pathname.startsWith("/auth/reset-password")) return supabaseResponse;
+
   if (!user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
 
-  // Guard admin routes
-  if (pathname.startsWith("/admin") && profile?.role !== "admin") {
+  if (pathname.startsWith("/admin") && profile?.role !== "admin" && profile?.role !== "member") {
     return NextResponse.redirect(new URL("/client", request.url));
   }
 
-  // Guard client routes
   if (pathname.startsWith("/client") && profile?.role !== "client") {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
