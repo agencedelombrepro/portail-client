@@ -4,11 +4,12 @@ compatibility_flags = ["nodejs_compat"]
 main = ".open-next/worker.js"
 assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
-# Route : intercepte uniquement /portail-client/* sur le domaine principal
-routes = [
-  { pattern = "agencedelombre.fr/portail-client/*", zone_name = "agencedelombre.fr" },
-  { pattern = "www.agencedelombre.fr/portail-client/*", zone_name = "agencedelombre.fr" },
-]
+# Routes à activer après le premier déploiement réussi
+# (nécessite que agencedelombre.fr soit dans le compte Cloudflare)
+# routes = [
+#   { pattern = "agencedelombre.fr/portail-client/*", zone_name = "agencedelombre.fr" },
+#   { pattern = "www.agencedelombre.fr/portail-client/*", zone_name = "agencedelombre.fr" },
+# ]
 
 [vars]
 NEXT_PUBLIC_APP_URL = "https://agencedelombre.fr"
